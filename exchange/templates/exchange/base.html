@@ -40,17 +40,34 @@
 		  </div>
 	    </form>
 
-	    <form action="{% url 'show_exchangeRate' %}" method="POST">
+	    <form action="{% url 'show_exchangeRate' %}" method="POST" style="margin-bottom:3%">
 	        	{% csrf_token %}
 		  <div class="col-lg-6 col-lg-offset-3">
 		    <div class="input-group">
 		      <input type="text" class="form-control" name="selected_exchanges" placeholder="환율코드 입력... (콤마로 구분)">
+		      <input type="date" class="form-control" name="start_date_search" placeholder="from">
+		      <input type="date" class="form-control" name="end_date_search" placeholder="to">
 		      <span class="input-group-btn">
 		        <button class="btn btn-success" type="submit">조회</button>
 		      </span>
 		    </div>
 		  </div>
 	    </form>
+		
+	    <form action="{% url 'download_to_csv' %}" method="POST">
+	        	{% csrf_token %}
+		  <div class="col-lg-6 col-lg-offset-3">
+		    <div class="input-group">
+		      <input type="text" class="form-control" name="selected_exchanges" placeholder="환율코드 입력... (콤마로 구분)">
+		      <input type="date" class="form-control" name="start_date_search" placeholder="from">
+		      <input type="date" class="form-control" name="end_date_search" placeholder="to">
+		      <span class="input-group-btn">
+		        <button class="btn btn-warning" type="submit">csv</button>
+		      </span>
+		    </div>
+		  </div>
+	    </form>
+
 	</div>
 
 	{% block content %}

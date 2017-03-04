@@ -8,6 +8,7 @@ import json
 import timeit
 import numpy as np 
 import quandl
+import csv
 # Create your views here.
 from .models import Exchange
 from quandl.errors.quandl_error import NotFoundError 
@@ -63,6 +64,19 @@ def createDaysForYear(term):
 	return days
 
 
+def createDaysForWantedTerm(s_date, e_date):
+	# start_date = datetime.datetime.now() - relativedelta(years=term)
+	# end_date = datetime.datetime.now() + datetime.timedelta(days=1)
+	
+	days = []
+	d = s_date
+	while(d.year != e_date.year or d.month != e_date.month or d.day != e_date.day):
+		days.append(d.strftime('%Y-%m-%d'))
+		d = d + datetime.timedelta(days=1)
+
+	return days
+
+
 # 환율정보 디스플레이 
 def index(request):
 	print "--------------------------------------"
@@ -85,37 +99,73 @@ def index(request):
 		print "model successfully created !!"
 
 	if selected_exchanges:
-
 		not_exist_codes = []
-		day_list = []
+		# day_list = []
 
-		# 그래프에 필요한 날짜생성 
-		days = createDaysForYear(TERM)	
-		for day in days:
-			d = day.strftime('%Y-%m-%d')
-			day_list.append(d)
-		day_list.insert(0, 'x')
-		columns = [day_list]
+		try:
+			start_date_search = datetime.datetime.strptime(request.POST['start_date_search'], "%Y-%m-%d")
+		except:
+			start_date_search = datetime.datetime.strptime('2012-03-02', "%Y-%m-%d")
+		try:
+			end_date_search = datetime.datetime.strptime(request.POST['end_date_search'], "%Y-%m-%d")
+		except:
+			end_date_search = datetime.datetime.strptime('2017-03-02', "%Y-%m-%d")
+		
+
+		# day_list = createDaysForWantedTerm(start_date_search, end_date_search)
+		# day_list.insert(0, 'x')
+
+		columns = []
+
 
 		# DB 조회 
 		for code in selected_exchanges:
 			try:
-				print "model exist in DB"
+				
 				exchange_model = Exchange.objects.get(nation_code=code)
-				print exchange_model.nation_code
-				np_list = np.array(json.loads(exchange_model.exData)) # list to np array
-				data = np_list[:, 1].tolist() # np array to list
+				if(exchange_model):
+					print "model exist in DB"
+					print exchange_model.nation_code
+				
+				exData = json.loads(exchange_model.exData)
+				np_exData = np.array(exData) # list to np array
+				x = np_exData[:, 0] # np array
+				y = np_exData[:, 1] # np array
+				x_map = np.array(map(lambda p: datetime.datetime.strptime(p, "%Y-%m-%d"), x)) # np array
+
+				condition = np.logical_and(x_map >=  start_date_search, x_map <= end_date_search)
+				date = x[np.where(condition)].tolist()
+				data = y[np.where(condition)].tolist()
+
+				# print type(date)
+				date.insert(0, 'x')
 				data.insert(0, code)
+
 				columns.append(data) 
+				columns.insert(0, date)
 		
 			except:
 				print "model doesn't exist in DB"
 				not_exist_codes.append(code)
 
+
 		# DB 존재하는 경우 
 		if len(columns) > 1:
 			isExist = True
 			context = {"columns":json.dumps(columns), "not_codes":not_exist_codes, "isExistData":isExist}
+
+			file_name = 'quandl_web_exchangeRate.csv'
+
+			# 메이저 통화 배열 생성 
+			ex_ids = ['EUR', 'GBP', 'CNY', 'INR', 'AUD', 'CAD', 'AED', 'JPY', 'HKD', 'KRW']
+
+			# CSV 저장 
+			with open(file_name, 'w') as f:
+				writer = csv.writer(f, csv.excel)
+				for column in columns:
+					writer.writerow(column)
+
+
 		else:
 			context = {"not_codes":not_exist_codes, "isExistData":isExist}
 	else:
@@ -131,7 +181,7 @@ def store(request):
 	is_saved = 0
 	start_time = timeit.default_timer()
 	exchanges = request.POST['exchanges']
-
+	
 	# 수집할 환율코드 및 날짜 배열 만들기 
 	codes = delete_spaces(exchanges)
 	start_date = getStartDate(TERM)
@@ -160,3 +210,56 @@ def store(request):
 	print "실행시간(min) : " + str(round(elapsed / 60 , 3)) + ' min'
 
 	return HttpResponseRedirect("/"+"?is_saved="+str(is_saved))
+
+def csvWriter(request):
+	# Create the HttpResponse object with the appropriate CSV header.
+	response = HttpResponse(content_type='text/csv')
+	response['Content-Disposition'] = 'attachment; filename="exchangeRate.csv"'
+	writer = csv.writer(response)
+
+	try: 
+		selected_exchanges = delete_spaces(request.POST['selected_exchanges'])
+		print selected_exchanges
+	except:
+		print "you haven't enter exchange rate code !!"
+
+
+	if selected_exchanges:
+		not_exist_codes = []
+		try:
+			start_date_search = datetime.datetime.strptime(request.POST['start_date_search'], "%Y-%m-%d")
+		except:
+			start_date_search = datetime.datetime.strptime('2012-03-02', "%Y-%m-%d")
+		try:
+			end_date_search = datetime.datetime.strptime(request.POST['end_date_search'], "%Y-%m-%d")
+		except:
+			end_date_search = datetime.datetime.now()
+
+
+		# DB 조회 
+		for code in selected_exchanges:
+			try:
+				
+				exchange_model = Exchange.objects.get(nation_code=code)
+				if(exchange_model):
+					print "model exist in DB"
+					print exchange_model.nation_code
+				
+				exData = json.loads(exchange_model.exData)
+				np_exData = np.array(exData) # list to np array
+				x = np_exData[:, 0] # np array
+				y = np_exData[:, 1] # np array
+				x_map = np.array(map(lambda p: datetime.datetime.strptime(p, "%Y-%m-%d"), x)) # np array
+
+				condition = np.logical_and(x_map >=  start_date_search, x_map <= end_date_search)
+				date = x[np.where(condition)].tolist()
+				data = y[np.where(condition)].tolist()
+
+				for i in range(len(date)):
+					writer.writerow([exchange_model.nation_code, date[i], data[i], data[i], data[i], data[i]])
+
+			except:
+				print "model doesn't exist in DB"
+				not_exist_codes.append(code)
+
+	return response
