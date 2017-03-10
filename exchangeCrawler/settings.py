@@ -123,5 +123,5 @@ STATIC_URL = '/static/'
 
 
 CRONJOBS = [
-    ('* * * * *', 'exchange.cron.my_scheduled_job', '>> /home/leesy/dev/crawler/exchangeCrawler/exchange/scheduled_job.log'), 
+    ('0 0 * * *', 'exchange.cron.my_scheduled_job', '>> /home/leesy/dev/crawler/exchangeCrawler/exchange/scheduled_job.log'), 
 ]

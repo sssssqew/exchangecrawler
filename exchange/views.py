@@ -109,7 +109,7 @@ def index(request):
 		try:
 			end_date_search = datetime.datetime.strptime(request.POST['end_date_search'], "%Y-%m-%d")
 		except:
-			end_date_search = datetime.datetime.strptime('2017-03-02', "%Y-%m-%d")
+			end_date_search = datetime.datetime.now()
 		
 
 		# day_list = createDaysForWantedTerm(start_date_search, end_date_search)
@@ -154,16 +154,16 @@ def index(request):
 			isExist = True
 			context = {"columns":json.dumps(columns), "not_codes":not_exist_codes, "isExistData":isExist}
 
-			file_name = 'quandl_web_exchangeRate.csv'
+			# file_name = 'quandl_web_exchangeRate.csv'
 
-			# 메이저 통화 배열 생성 
-			ex_ids = ['EUR', 'GBP', 'CNY', 'INR', 'AUD', 'CAD', 'AED', 'JPY', 'HKD', 'KRW']
+			# # 메이저 통화 배열 생성 
+			# ex_ids = ['EUR', 'GBP', 'CNY', 'INR', 'AUD', 'CAD', 'AED', 'JPY', 'HKD', 'KRW']
 
-			# CSV 저장 
-			with open(file_name, 'w') as f:
-				writer = csv.writer(f, csv.excel)
-				for column in columns:
-					writer.writerow(column)
+			# # CSV 저장 
+			# with open(file_name, 'w') as f:
+			# 	writer = csv.writer(f, csv.excel)
+			# 	for column in columns:
+			# 		writer.writerow(column)
 
 
 		else:
