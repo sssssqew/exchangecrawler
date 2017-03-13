@@ -30,12 +30,14 @@ def getExchangeRate(code, start_date):
 def my_scheduled_job():
 	tz = pytz.timezone('Asia/Seoul')
 	log_time = datetime.datetime.now(tz=tz).strftime("%Y-%m-%d %H:%M:%S")
-
+	print "log time : " + log_time + "-----> cron job executed !!"
+	
 	codes = ['EUR', 'GBP', 'CNY', 'INR', 'AUD', 'CAD', 'AED', 'JPY', 'HKD', 'KRW']
 	today = datetime.datetime.now().strftime("%Y-%m-%d")
 	
 	for code in codes:
-		ex_data_quandl = getExchangeRate(code, today)
+		ex_data_quandl = getExchangeRate(code, today)[0]
+		# print ex_data_quandl
 
 		try:
 			exchange_model = Exchange.objects.get(nation_code=code)
@@ -51,4 +53,4 @@ def my_scheduled_job():
 		except:
 			print "model does not exist"
 
-	print "log time : " + log_time + "-----> cron job executed !!"
+	
