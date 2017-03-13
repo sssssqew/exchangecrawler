@@ -257,8 +257,10 @@ def csvWriter(request):
 				date = x[np.where(condition)].tolist()
 				data = y[np.where(condition)].tolist()
 
+				# print type(date[3])
+
 				for i in range(len(date)):
-					writer.writerow([exchange_model.nation_code, date[i], data[i], data[i], data[i], data[i]])
+					writer.writerow([exchange_model.nation_code.encode('euc-kr'), date[i].encode('euc-kr'), data[i].encode('euc-kr'), data[i].encode('euc-kr'), data[i].encode('euc-kr'), data[i].encode('euc-kr')])
 
 			except:
 				print "model doesn't exist in DB"
